@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { YearStats } from "@/types";
@@ -15,27 +15,94 @@ import SportSection from "@/components/SportSection";
 import InsightCard from "@/components/InsightCard";
 import LoadingSpinner from "@/components/LoadingSpinner";
 
+// Cache configuration
+const CACHE_KEY_PREFIX = "strava_rewind_";
+const CACHE_TTL_MS = 60 * 60 * 1000; // 1 hour
+
+interface CachedData {
+  stats: YearStats;
+  timestamp: number;
+}
+
+function getCachedStats(year: number): YearStats | null {
+  if (typeof window === "undefined") return null;
+
+  try {
+    const cached = localStorage.getItem(`${CACHE_KEY_PREFIX}${year}`);
+    if (!cached) return null;
+
+    const data: CachedData = JSON.parse(cached);
+    const now = Date.now();
+
+    // Check if cache is still valid
+    if (now - data.timestamp < CACHE_TTL_MS) {
+      return data.stats;
+    }
+
+    // Cache expired, remove it
+    localStorage.removeItem(`${CACHE_KEY_PREFIX}${year}`);
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+function setCachedStats(year: number, stats: YearStats): void {
+  if (typeof window === "undefined") return;
+
+  try {
+    const data: CachedData = {
+      stats,
+      timestamp: Date.now(),
+    };
+    localStorage.setItem(`${CACHE_KEY_PREFIX}${year}`, JSON.stringify(data));
+  } catch {
+    // Storage might be full, ignore
+  }
+}
+
+function clearCache(): void {
+  if (typeof window === "undefined") return;
+
+  try {
+    const keys = Object.keys(localStorage).filter((k) =>
+      k.startsWith(CACHE_KEY_PREFIX)
+    );
+    keys.forEach((k) => localStorage.removeItem(k));
+  } catch {
+    // Ignore errors
+  }
+}
+
 export default function Dashboard() {
   const [stats, setStats] = useState<YearStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  const [lastFetched, setLastFetched] = useState<Date | null>(null);
 
   const currentYear = new Date().getFullYear();
   const availableYears = Array.from({ length: 5 }, (_, i) => currentYear - i);
 
-  useEffect(() => {
-    fetchStats(selectedYear);
-  }, [selectedYear]);
-
-  async function fetchStats(year: number) {
+  const fetchStats = useCallback(async (year: number, forceRefresh = false) => {
     setLoading(true);
     setError(null);
+
+    // Try to get cached data first (unless force refresh)
+    if (!forceRefresh) {
+      const cached = getCachedStats(year);
+      if (cached) {
+        setStats(cached);
+        setLoading(false);
+        return;
+      }
+    }
 
     try {
       const response = await fetch(`/api/stats?year=${year}`);
 
       if (response.status === 401) {
+        clearCache(); // Clear cache on auth failure
         window.location.href = "/";
         return;
       }
@@ -47,12 +114,22 @@ export default function Dashboard() {
 
       const data = await response.json();
       setStats(data);
+      setCachedStats(year, data); // Cache the result
+      setLastFetched(new Date());
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred");
     } finally {
       setLoading(false);
     }
-  }
+  }, []);
+
+  useEffect(() => {
+    fetchStats(selectedYear);
+  }, [selectedYear, fetchStats]);
+
+  const handleRefresh = () => {
+    fetchStats(selectedYear, true);
+  };
 
   if (loading) {
     return <LoadingSpinner message="Loading your year in sport..." />;
@@ -106,6 +183,28 @@ export default function Dashboard() {
               ))}
             </div>
 
+            {/* Refresh Button */}
+            <button
+              onClick={handleRefresh}
+              className="btn-secondary text-sm hidden sm:flex items-center gap-2"
+              title="Refresh data from Strava"
+            >
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                />
+              </svg>
+              Refresh
+            </button>
+
             {/* User Profile */}
             <div className="flex items-center gap-3">
               {stats.athlete.profile && (
@@ -122,8 +221,24 @@ export default function Dashboard() {
               </span>
             </div>
 
-            <Link href="/api/auth/logout" className="btn-secondary text-sm">
-              Logout
+            <Link
+              href="/api/auth/logout"
+              className="btn-secondary text-sm flex items-center gap-2"
+            >
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+                />
+              </svg>
+              <span className="hidden sm:inline">Logout</span>
             </Link>
           </div>
         </div>
