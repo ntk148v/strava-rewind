@@ -66,7 +66,7 @@ export default function ActivityHeatmap({
 
   return (
     <div>
-      <h4 className="text-sm text-zinc-400 mb-3">Activity Calendar</h4>
+      <h4 className="text-sm text-zinc-400 mb-3">Activity Heatmap</h4>
 
       {/* Month labels */}
       <div className="flex text-xs text-zinc-500 mb-1 pl-6">

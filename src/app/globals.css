@@ -14,18 +14,14 @@
   --yellow-accent: #f59e0b;
 
   /* Gradients */
-  --gradient-primary: linear-gradient(
-    135deg,
-    #fc4c02 0%,
-    #ff6b35 50%,
-    #fbbf24 100%
-  );
+  --gradient-primary: linear-gradient(135deg,
+      #fc4c02 0%,
+      #ff6b35 50%,
+      #fbbf24 100%);
   --gradient-dark: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-  --gradient-card: linear-gradient(
-    145deg,
-    rgba(255, 255, 255, 0.1) 0%,
-    rgba(255, 255, 255, 0.05) 100%
-  );
+  --gradient-card: linear-gradient(145deg,
+      rgba(255, 255, 255, 0.1) 0%,
+      rgba(255, 255, 255, 0.05) 100%);
 
   /* Dark mode base */
   --bg-primary: #0a0a0f;
@@ -141,6 +137,7 @@ body {
 }
 
 @keyframes pulse-glow {
+
   0%,
   100% {
     box-shadow: 0 0 20px rgba(252, 76, 2, 0.3);
@@ -166,6 +163,7 @@ body {
 }
 
 @keyframes float {
+
   0%,
   100% {
     transform: translateY(0px);
@@ -262,11 +260,9 @@ body {
 }
 
 .insight-card {
-  background: linear-gradient(
-    135deg,
-    rgba(252, 76, 2, 0.1) 0%,
-    rgba(255, 107, 53, 0.05) 100%
-  );
+  background: linear-gradient(135deg,
+      rgba(252, 76, 2, 0.1) 0%,
+      rgba(255, 107, 53, 0.05) 100%);
   border: 1px solid rgba(252, 76, 2, 0.2);
   border-radius: 20px;
   padding: var(--space-lg);
@@ -399,16 +395,12 @@ body {
   left: -50%;
   width: 200%;
   height: 200%;
-  background: radial-gradient(
-      circle at 30% 70%,
+  background: radial-gradient(circle at 30% 70%,
       rgba(252, 76, 2, 0.15) 0%,
-      transparent 50%
-    ),
-    radial-gradient(
-      circle at 70% 30%,
+      transparent 50%),
+    radial-gradient(circle at 70% 30%,
       rgba(124, 58, 237, 0.1) 0%,
-      transparent 50%
-    );
+      transparent 50%);
 }
 
 .hero-content {
@@ -444,7 +436,7 @@ body {
 .stats-grid {
   display: grid;
   gap: var(--space-md);
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
 }
 
 .sports-grid {

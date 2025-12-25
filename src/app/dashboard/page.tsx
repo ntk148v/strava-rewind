@@ -333,11 +333,7 @@ export default function Dashboard() {
                     value={`${stats.longestStreak} days`}
                     subtitle="Consecutive active days"
                   />
-                </div>
-
-                {/* Visualizations */}
-                <div className="grid md:grid-cols-2 gap-6 mt-6">
-                  {/* Activity Calendar */}
+                  {/* Activity Heatmap */}
                   {stats.activityDates && stats.activityDates.length > 0 && (
                     <div className="stat-card md:col-span-2">
                       <ActivityHeatmap
