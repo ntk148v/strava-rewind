@@ -33,7 +33,7 @@ export default function ShareCard({ stats, year }: ShareCardProps) {
         backgroundColor: "#18181b",
         scale: 2,
         useCORS: true,
-        allowTaint: true,
+        logging: false,
       });
 
       const link = document.createElement("a");
@@ -52,21 +52,50 @@ export default function ShareCard({ stats, year }: ShareCardProps) {
 
   const modalContent = (
     <div
-      className="fixed inset-0 flex items-center justify-center bg-black/80"
-      style={{ zIndex: 99999, padding: "1.5rem" }}
+      className="fixed inset-0 flex items-center justify-center"
+      style={{
+        zIndex: 99999,
+        padding: "1.5rem",
+        backgroundColor: "rgba(0,0,0,0.8)",
+      }}
       onClick={(e) => {
         if (e.target === e.currentTarget) setShowPreview(false);
       }}
     >
-      <div className="bg-zinc-900 rounded-2xl p-6 max-w-md w-full max-h-[90vh] overflow-auto">
-        <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-semibold">Share Your Year</h3>
+      <div
+        style={{
+          backgroundColor: "#18181b",
+          borderRadius: "1rem",
+          padding: "1.5rem",
+          maxWidth: "420px",
+          width: "100%",
+          maxHeight: "90vh",
+          overflow: "auto",
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            marginBottom: "1rem",
+          }}
+        >
+          <h3
+            style={{
+              fontSize: "1.125rem",
+              fontWeight: "600",
+              color: "#ffffff",
+            }}
+          >
+            Share Your Year
+          </h3>
           <button
             onClick={() => setShowPreview(false)}
-            className="text-zinc-400 hover:text-white p-1"
+            style={{ color: "#a1a1aa", padding: "0.25rem" }}
           >
             <svg
-              className="w-6 h-6"
+              style={{ width: "1.5rem", height: "1.5rem" }}
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -81,88 +110,194 @@ export default function ShareCard({ stats, year }: ShareCardProps) {
           </button>
         </div>
 
-        {/* Share Card Preview */}
+        {/* Share Card Preview - ALL INLINE STYLES for html2canvas compatibility */}
         <div
           ref={cardRef}
-          className="rounded-xl p-6 mb-4"
           style={{
             width: "100%",
             aspectRatio: "1",
             background:
               "linear-gradient(135deg, #18181b 0%, #27272a 50%, #18181b 100%)",
+            borderRadius: "0.75rem",
+            padding: "1.5rem",
+            marginBottom: "1rem",
+            fontFamily: "system-ui, -apple-system, sans-serif",
           }}
         >
-          <div className="text-center mb-5">
-            <div className="text-3xl mb-1">🏃</div>
-            <h2 className="text-2xl font-bold mb-1">
+          <div style={{ textAlign: "center", marginBottom: "1.25rem" }}>
+            <div style={{ fontSize: "2rem", marginBottom: "0.25rem" }}>🏃</div>
+            <h2
+              style={{
+                fontSize: "1.5rem",
+                fontWeight: "bold",
+                marginBottom: "0.25rem",
+                color: "#ffffff",
+              }}
+            >
               <span style={{ color: "#fc4c02" }}>{year}</span> Rewind
             </h2>
-            <p className="text-zinc-400 text-sm">
+            <p style={{ color: "#a1a1aa", fontSize: "0.875rem" }}>
               {stats.athlete.firstname}&apos;s Year in Sport
             </p>
           </div>
 
-          <div className="grid grid-cols-2 gap-3 mb-5">
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "1fr 1fr",
+              gap: "0.75rem",
+              marginBottom: "1.25rem",
+            }}
+          >
             <div
-              className="text-center p-3 rounded-lg"
-              style={{ background: "rgba(255,255,255,0.05)" }}
+              style={{
+                textAlign: "center",
+                padding: "0.75rem",
+                borderRadius: "0.5rem",
+                background: "rgba(255,255,255,0.05)",
+              }}
             >
-              <div className="text-xl font-bold" style={{ color: "#fc4c02" }}>
+              <div
+                style={{
+                  fontSize: "1.25rem",
+                  fontWeight: "bold",
+                  color: "#fc4c02",
+                }}
+              >
                 {stats.totalActivities}
               </div>
-              <div className="text-xs text-zinc-400">Activities</div>
+              <div style={{ fontSize: "0.75rem", color: "#a1a1aa" }}>
+                Activities
+              </div>
             </div>
             <div
-              className="text-center p-3 rounded-lg"
-              style={{ background: "rgba(255,255,255,0.05)" }}
+              style={{
+                textAlign: "center",
+                padding: "0.75rem",
+                borderRadius: "0.5rem",
+                background: "rgba(255,255,255,0.05)",
+              }}
             >
-              <div className="text-xl font-bold" style={{ color: "#fc4c02" }}>
+              <div
+                style={{
+                  fontSize: "1.25rem",
+                  fontWeight: "bold",
+                  color: "#fc4c02",
+                }}
+              >
                 {formatDistance(stats.totalDistance)}
               </div>
-              <div className="text-xs text-zinc-400">Distance</div>
+              <div style={{ fontSize: "0.75rem", color: "#a1a1aa" }}>
+                Distance
+              </div>
             </div>
             <div
-              className="text-center p-3 rounded-lg"
-              style={{ background: "rgba(255,255,255,0.05)" }}
+              style={{
+                textAlign: "center",
+                padding: "0.75rem",
+                borderRadius: "0.5rem",
+                background: "rgba(255,255,255,0.05)",
+              }}
             >
-              <div className="text-xl font-bold" style={{ color: "#fc4c02" }}>
+              <div
+                style={{
+                  fontSize: "1.25rem",
+                  fontWeight: "bold",
+                  color: "#fc4c02",
+                }}
+              >
                 {formatDuration(stats.totalTime)}
               </div>
-              <div className="text-xs text-zinc-400">Time</div>
+              <div style={{ fontSize: "0.75rem", color: "#a1a1aa" }}>Time</div>
             </div>
             <div
-              className="text-center p-3 rounded-lg"
-              style={{ background: "rgba(255,255,255,0.05)" }}
+              style={{
+                textAlign: "center",
+                padding: "0.75rem",
+                borderRadius: "0.5rem",
+                background: "rgba(255,255,255,0.05)",
+              }}
             >
-              <div className="text-xl font-bold" style={{ color: "#fc4c02" }}>
+              <div
+                style={{
+                  fontSize: "1.25rem",
+                  fontWeight: "bold",
+                  color: "#fc4c02",
+                }}
+              >
                 {Math.round(stats.totalElevation).toLocaleString()}m
               </div>
-              <div className="text-xs text-zinc-400">Elevation</div>
+              <div style={{ fontSize: "0.75rem", color: "#a1a1aa" }}>
+                Elevation
+              </div>
             </div>
           </div>
 
-          <div className="flex justify-around text-center mb-5">
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-around",
+              textAlign: "center",
+              marginBottom: "1.25rem",
+            }}
+          >
             <div>
-              <div className="text-lg">🔥</div>
-              <div className="text-lg font-bold">{stats.longestStreak}</div>
-              <div className="text-xs text-zinc-400">Day Streak</div>
+              <div style={{ fontSize: "1.125rem" }}>🔥</div>
+              <div
+                style={{
+                  fontSize: "1.125rem",
+                  fontWeight: "bold",
+                  color: "#ffffff",
+                }}
+              >
+                {stats.longestStreak}
+              </div>
+              <div style={{ fontSize: "0.75rem", color: "#a1a1aa" }}>
+                Day Streak
+              </div>
             </div>
             <div>
-              <div className="text-lg">📅</div>
-              <div className="text-lg font-bold">{stats.daysActive}</div>
-              <div className="text-xs text-zinc-400">Days Active</div>
+              <div style={{ fontSize: "1.125rem" }}>📅</div>
+              <div
+                style={{
+                  fontSize: "1.125rem",
+                  fontWeight: "bold",
+                  color: "#ffffff",
+                }}
+              >
+                {stats.daysActive}
+              </div>
+              <div style={{ fontSize: "0.75rem", color: "#a1a1aa" }}>
+                Days Active
+              </div>
             </div>
             <div>
-              <div className="text-lg">⭐</div>
-              <div className="text-lg font-bold">{stats.totalPRs}</div>
-              <div className="text-xs text-zinc-400">PRs</div>
+              <div style={{ fontSize: "1.125rem" }}>⭐</div>
+              <div
+                style={{
+                  fontSize: "1.125rem",
+                  fontWeight: "bold",
+                  color: "#ffffff",
+                }}
+              >
+                {stats.totalPRs}
+              </div>
+              <div style={{ fontSize: "0.75rem", color: "#a1a1aa" }}>PRs</div>
             </div>
           </div>
 
-          <div className="text-center text-xs text-zinc-500">Strava Rewind</div>
+          <div
+            style={{
+              textAlign: "center",
+              fontSize: "0.75rem",
+              color: "#71717a",
+            }}
+          >
+            Strava Rewind
+          </div>
         </div>
 
-        <div className="flex gap-3">
+        <div style={{ display: "flex", gap: "0.75rem" }}>
           <button
             onClick={handleDownload}
             disabled={isGenerating}
@@ -173,7 +308,7 @@ export default function ShareCard({ stats, year }: ShareCardProps) {
             ) : (
               <>
                 <svg
-                  className="w-5 h-5"
+                  style={{ width: "1.25rem", height: "1.25rem" }}
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
