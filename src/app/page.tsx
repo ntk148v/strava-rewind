@@ -1,5 +1,6 @@
 // Landing Page - Connect with Strava
 import Link from "next/link";
+import Image from "next/image";
 
 export default function Home() {
   return (
@@ -42,16 +43,19 @@ export default function Home() {
             beautifully visualized.
           </p>
 
-          {/* CTA Button */}
+          {/* CTA Button - Official Strava Connect Button */}
           <div className="hero-cta">
             <Link
               href="/api/auth/login"
-              className="btn-primary text-lg animate-pulse-glow"
+              className="inline-block hover:opacity-90 transition-opacity"
             >
-              <svg className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M15.387 17.944l-2.089-4.116h-3.065L15.387 24l5.15-10.172h-3.066m-7.008-5.599l2.836 5.598h4.172L10.463 0l-7 13.828h4.169" />
-              </svg>
-              Connect with Strava
+              <Image
+                src="/strava/btn_strava_connect_with_orange.svg"
+                alt="Connect with Strava"
+                width={193}
+                height={48}
+                priority
+              />
             </Link>
           </div>
         </div>
@@ -71,7 +75,7 @@ export default function Home() {
             <div className="stat-card">
               <div className="text-3xl mb-4">🔥</div>
               <h3 className="font-semibold text-lg mb-2">
-                Streaks & Consistency
+                Streaks &amp; Consistency
               </h3>
               <p className="text-zinc-400 text-sm">
                 Your longest streaks, most active days, and training patterns.
@@ -91,9 +95,18 @@ export default function Home() {
 
       {/* Footer */}
       <footer className="site-footer relative z-10">
-        <p>
-          Not affiliated with Strava Inc. • Built for athletes, by athletes ❤️
-        </p>
+        <div className="flex flex-col items-center gap-4">
+          {/* Powered by Strava logo */}
+          <Image
+            src="/strava/api_logo_pwrdBy_strava_horiz_white.svg"
+            alt="Powered by Strava"
+            width={162}
+            height={30}
+          />
+          <p className="text-zinc-500 text-sm">
+            Built for athletes, by athletes ❤️
+          </p>
+        </div>
       </footer>
     </div>
   );

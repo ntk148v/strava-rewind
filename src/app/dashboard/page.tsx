@@ -668,7 +668,17 @@ export default function Dashboard() {
 
       {/* Footer */}
       <footer className="site-footer">
-        <p>Made with ❤️ for athletes everywhere</p>
+        <div className="flex flex-col items-center gap-4">
+          <Image
+            src="/strava/api_logo_pwrdBy_strava_horiz_white.svg"
+            alt="Powered by Strava"
+            width={162}
+            height={30}
+          />
+          <p className="text-zinc-500 text-sm">
+            Made with ❤️ for athletes everywhere
+          </p>
+        </div>
       </footer>
     </div>
   );
