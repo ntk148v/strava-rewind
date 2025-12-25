@@ -421,12 +421,12 @@ body {
   font-size: 1.25rem;
   color: var(--text-secondary);
   max-width: 600px;
-  margin: 0 auto var(--space-xl);
+  margin: 0 auto var(--space-sm);
   line-height: 1.6;
 }
 
 .hero-cta {
-  margin-bottom: var(--space-xl);
+  margin-bottom: var(--space-sm);
 }
 
 /* ==========================================
@@ -449,7 +449,6 @@ body {
   display: grid;
   gap: var(--space-lg);
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  margin-top: var(--space-3xl);
 }
 
 .insights-grid {
