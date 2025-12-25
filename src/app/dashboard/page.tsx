@@ -349,11 +349,14 @@ export default function Dashboard() {
                       <div className="flex items-start justify-between mb-3">
                         <span className="text-2xl">📊</span>
                       </div>
-                      <p className="text-zinc-400 text-sm mb-1">
+                      <p className="text-zinc-400 text-sm mb-3">
                         Distance by Month
                       </p>
 
-                      <div className="flex items-end gap-1 h-24">
+                      <div
+                        className="flex items-end gap-1"
+                        style={{ height: "100px" }}
+                      >
                         {stats.monthlyData.map((m, index) => {
                           const maxDistance = Math.max(
                             ...stats.monthlyData.map((d) => d.distance),
@@ -361,27 +364,30 @@ export default function Dashboard() {
                           );
                           const heightPercent =
                             (m.distance / maxDistance) * 100;
+                          const barHeight = Math.max(
+                            (heightPercent / 100) * 80,
+                            4
+                          );
                           return (
                             <div
                               key={index}
-                              className="flex-1 flex flex-col items-center gap-1"
+                              className="flex-1 flex flex-col items-center justify-end"
+                              style={{ height: "100%" }}
                             >
-                              <div className="w-full flex-1 flex items-end">
-                                <div
-                                  className="w-full rounded-t hover:opacity-80 transition-opacity"
-                                  style={{
-                                    height: `${Math.max(heightPercent, 3)}%`,
-                                    background:
-                                      m.distance > 0
-                                        ? "linear-gradient(to top, #fc4c02, #ff6b35)"
-                                        : "rgba(255,255,255,0.1)",
-                                  }}
-                                  title={`${m.month}: ${(
-                                    m.distance / 1000
-                                  ).toFixed(1)} km`}
-                                />
-                              </div>
-                              <span className="text-xs text-zinc-500">
+                              <div
+                                className="w-full rounded-t hover:opacity-80 transition-opacity"
+                                style={{
+                                  height: `${barHeight}px`,
+                                  backgroundColor:
+                                    m.distance > 0
+                                      ? "#fc4c02"
+                                      : "rgba(255,255,255,0.1)",
+                                }}
+                                title={`${m.month}: ${(
+                                  m.distance / 1000
+                                ).toFixed(1)} km`}
+                              />
+                              <span className="text-xs text-zinc-500 mt-1">
                                 {m.month.slice(0, 1)}
                               </span>
                             </div>
