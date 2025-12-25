@@ -22,7 +22,7 @@ Table of Contents:
   - [3.1. Landing Page](#31-landing-page)
   - [3.2. Dashboard](#32-dashboard)
 
-> [!important] Disclaimer
+> [!IMPORTANT] Disclaimer
 >
 > **Why do I create this?** The Strava Year in Sport stats round-up of a user's activity from the past 12 months is along the lines of similar features offered by other apps, such as Spotify Wrapped. However, while many, like Spotify, give all users the round-up regardless of if they use the free version or pay for a subscription, Strava has put its Year in Sport behind a paywall as a paid feature.
 >
