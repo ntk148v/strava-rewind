@@ -48,7 +48,7 @@ export default function YoYComparison({
   currentStats,
   previousStats,
 }: YoYComparisonProps) {
-  if (!previousStats || previousStats.totalActivities === 0) {
+  if (!previousStats) {
     return null;
   }
 
@@ -92,10 +92,6 @@ export default function YoYComparison({
 
   return (
     <div className="stat-card">
-      <h3 className="section-header text-lg mb-4">
-        <span>📊</span> vs {currentYear - 1}
-      </h3>
-
       <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
         {comparisons.map((item) => {
           const change = formatChange(item.current, item.previous);

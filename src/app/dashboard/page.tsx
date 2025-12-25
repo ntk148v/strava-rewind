@@ -20,6 +20,7 @@ import SportsPieChart, { getSportColor } from "@/components/SportsPieChart";
 import AchievementBadges from "@/components/AchievementBadges";
 import FunFacts from "@/components/FunFacts";
 import ShareCard from "@/components/ShareCard";
+import YoYComparison from "@/components/YoYComparison";
 
 // Cache configuration
 const CACHE_KEY_PREFIX = "strava_rewind_";
@@ -82,6 +83,9 @@ function clearCache(): void {
 
 export default function Dashboard() {
   const [stats, setStats] = useState<YearStats | null>(null);
+  const [previousYearStats, setPreviousYearStats] = useState<YearStats | null>(
+    null
+  );
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
@@ -122,6 +126,24 @@ export default function Dashboard() {
       setStats(data);
       setCachedStats(year, data); // Cache the result
       setLastFetched(new Date());
+
+      // Also fetch previous year stats for comparison (in background)
+      const previousYear = year - 1;
+      const cachedPrevious = getCachedStats(previousYear);
+      if (cachedPrevious) {
+        setPreviousYearStats(cachedPrevious);
+      } else {
+        // Fetch in background without blocking
+        fetch(`/api/stats?year=${previousYear}`)
+          .then((res) => (res.ok ? res.json() : null))
+          .then((prevData) => {
+            if (prevData) {
+              setPreviousYearStats(prevData);
+              setCachedStats(previousYear, prevData);
+            }
+          })
+          .catch(() => setPreviousYearStats(null));
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred");
     } finally {
@@ -408,6 +430,32 @@ export default function Dashboard() {
                   />
                 </div>
               </section>
+
+              {/* Year over Year Comparison */}
+              {previousYearStats && (
+                <section className="section animate-fade-in delay-100">
+                  <h2 className="section-header">
+                    <span>📊</span> vs {selectedYear - 1}
+                  </h2>
+                  <YoYComparison
+                    currentYear={selectedYear}
+                    currentStats={{
+                      totalActivities: stats.totalActivities,
+                      totalDistance: stats.totalDistance,
+                      totalTime: stats.totalTime,
+                      totalElevation: stats.totalElevation,
+                      daysActive: stats.daysActive,
+                    }}
+                    previousStats={{
+                      totalActivities: previousYearStats.totalActivities,
+                      totalDistance: previousYearStats.totalDistance,
+                      totalTime: previousYearStats.totalTime,
+                      totalElevation: previousYearStats.totalElevation,
+                      daysActive: previousYearStats.daysActive,
+                    }}
+                  />
+                </section>
+              )}
 
               {/* Performance Highlights */}
               <section className="section animate-fade-in delay-100">
