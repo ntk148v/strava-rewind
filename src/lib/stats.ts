@@ -128,6 +128,26 @@ export function computeYearStats(
     year,
   });
 
+  // Activity dates for heatmap
+  const activityDates = activities.map((a) => a.start_date_local);
+
+  // Monthly data for charts
+  const monthlyData = MONTHS.map((month, index) => {
+    const monthActivities = activities.filter(
+      (a) => new Date(a.start_date_local).getMonth() === index
+    );
+    return {
+      month,
+      activities: monthActivities.length,
+      distance: monthActivities.reduce((sum, a) => sum + a.distance, 0),
+      time: monthActivities.reduce((sum, a) => sum + a.moving_time, 0),
+      elevation: monthActivities.reduce(
+        (sum, a) => sum + a.total_elevation_gain,
+        0
+      ),
+    };
+  });
+
   return {
     year,
     athlete,
@@ -157,6 +177,8 @@ export function computeYearStats(
     eveningActivities,
     preferredTime,
     insights,
+    activityDates,
+    monthlyData,
   };
 }
 
@@ -507,5 +529,13 @@ function getEmptyStats(athlete: StravaAthlete, year: number): YearStats {
     eveningActivities: 0,
     preferredTime: "N/A",
     insights: [],
+    activityDates: [],
+    monthlyData: MONTHS.map((month) => ({
+      month,
+      activities: 0,
+      distance: 0,
+      time: 0,
+      elevation: 0,
+    })),
   };
 }

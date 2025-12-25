@@ -132,10 +132,26 @@ export interface YearStats {
 
   // Insights
   insights: Insight[];
+
+  // Additional data for visualizations
+  activityDates: string[]; // ISO date strings for heatmap
+  monthlyData: {
+    month: string;
+    activities: number;
+    distance: number;
+    time: number;
+    elevation: number;
+  }[];
 }
 
 export interface Insight {
-  type: 'time' | 'sport' | 'consistency' | 'location' | 'achievement' | 'social';
+  type:
+    | "time"
+    | "sport"
+    | "consistency"
+    | "location"
+    | "achievement"
+    | "social";
   icon: string;
   message: string;
   highlight?: string;
