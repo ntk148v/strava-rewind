@@ -14,6 +14,12 @@ import StatsCard from "@/components/StatsCard";
 import SportSection from "@/components/SportSection";
 import InsightCard from "@/components/InsightCard";
 import LoadingSpinner from "@/components/LoadingSpinner";
+import ActivityHeatmap from "@/components/ActivityHeatmap";
+import MonthlyChart from "@/components/MonthlyChart";
+import SportsPieChart, { getSportColor } from "@/components/SportsPieChart";
+import AchievementBadges from "@/components/AchievementBadges";
+import FunFacts from "@/components/FunFacts";
+import ShareCard from "@/components/ShareCard";
 
 // Cache configuration
 const CACHE_KEY_PREFIX = "strava_rewind_";
@@ -266,9 +272,12 @@ export default function Dashboard() {
             <h1 className="text-4xl md:text-5xl font-bold mb-4">
               Your <span className="gradient-text">{selectedYear}</span> Rewind
             </h1>
-            <p className="text-zinc-400 text-lg">
+            <p className="text-zinc-400 text-lg mb-6">
               {stats.athlete.firstname}&apos;s year in sport
             </p>
+            {stats.totalActivities > 0 && (
+              <ShareCard stats={stats} year={selectedYear} />
+            )}
           </section>
 
           {/* Stats Content */}
@@ -323,6 +332,77 @@ export default function Dashboard() {
                     title="Longest Streak"
                     value={`${stats.longestStreak} days`}
                     subtitle="Consecutive active days"
+                  />
+                </div>
+
+                {/* Visualizations */}
+                <div className="grid md:grid-cols-2 gap-6 mt-6">
+                  {/* Activity Calendar */}
+                  {stats.activityDates && stats.activityDates.length > 0 && (
+                    <div className="stat-card md:col-span-2">
+                      <ActivityHeatmap
+                        activityDates={stats.activityDates}
+                        year={selectedYear}
+                      />
+                    </div>
+                  )}
+
+                  {/* Distance by Month */}
+                  {stats.monthlyData && stats.monthlyData.length > 0 && (
+                    <div className="stat-card">
+                      <div className="flex items-start justify-between mb-3">
+                        <span className="text-2xl">📊</span>
+                      </div>
+                      <p className="text-zinc-400 text-sm mb-1">
+                        Distance by Month
+                      </p>
+
+                      <div className="flex items-end gap-1 h-24">
+                        {stats.monthlyData.map((m, index) => {
+                          const maxDistance = Math.max(
+                            ...stats.monthlyData.map((d) => d.distance),
+                            1
+                          );
+                          const heightPercent =
+                            (m.distance / maxDistance) * 100;
+                          return (
+                            <div
+                              key={index}
+                              className="flex-1 flex flex-col items-center gap-1"
+                            >
+                              <div className="w-full flex-1 flex items-end">
+                                <div
+                                  className="w-full rounded-t hover:opacity-80 transition-opacity"
+                                  style={{
+                                    height: `${Math.max(heightPercent, 3)}%`,
+                                    background:
+                                      m.distance > 0
+                                        ? "linear-gradient(to top, #fc4c02, #ff6b35)"
+                                        : "rgba(255,255,255,0.1)",
+                                  }}
+                                  title={`${m.month}: ${(
+                                    m.distance / 1000
+                                  ).toFixed(1)} km`}
+                                />
+                              </div>
+                              <span className="text-xs text-zinc-500">
+                                {m.month.slice(0, 1)}
+                              </span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Sports Distribution */}
+                  <SportsPieChart
+                    data={stats.sportStats.map((s) => ({
+                      name: formatSportType(s.sport),
+                      value: s.activityCount,
+                      color: getSportColor(s.sport),
+                    }))}
+                    total={stats.totalActivities}
                   />
                 </div>
               </section>
@@ -491,6 +571,22 @@ export default function Dashboard() {
                   </div>
                 </section>
               )}
+
+              {/* Achievements */}
+              <section className="section animate-fade-in delay-100">
+                <h2 className="section-header">
+                  <span>🏅</span> Achievements
+                </h2>
+                <AchievementBadges stats={stats} />
+              </section>
+
+              {/* Fun Facts */}
+              <section className="section animate-fade-in delay-200">
+                <h2 className="section-header">
+                  <span>🎉</span> Fun Facts
+                </h2>
+                <FunFacts stats={stats} />
+              </section>
             </>
           ) : (
             <section className="section text-center animate-fade-in">
