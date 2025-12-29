@@ -268,7 +268,8 @@ export default function Dashboard() {
               </span>
             </div>
 
-            <Link
+            {/* Use <a> tag instead of Link to prevent prefetching which triggers logout */}
+            <a
               href="/api/auth/logout"
               className="btn-secondary text-sm flex items-center gap-2"
             >
@@ -286,7 +287,7 @@ export default function Dashboard() {
                 />
               </svg>
               <span className="hidden sm:inline">Logout</span>
-            </Link>
+            </a>
           </div>
         </div>
       </header>
