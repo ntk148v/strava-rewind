@@ -99,15 +99,23 @@ export default function Dashboard() {
     setError(null);
     setPreviousYearStats(null); // Reset previous year stats when switching years
 
-    // Helper function to fetch previous year stats
+    // Helper function to fetch previous year stats with delay to avoid race condition
     const fetchPreviousYearStats = (previousYear: number) => {
       const cachedPrevious = getCachedStats(previousYear);
       if (cachedPrevious) {
         setPreviousYearStats(cachedPrevious);
-      } else {
-        // Fetch in background without blocking
+        return;
+      }
+
+      // Add small delay to allow any token refresh from main request to complete
+      // This prevents race condition where concurrent requests see stale tokens
+      setTimeout(() => {
         fetch(`/api/stats?year=${previousYear}`)
-          .then((res) => (res.ok ? res.json() : null))
+          .then((res) => {
+            // Don't throw on 401 for background fetch - just silently fail
+            if (res.status === 401) return null;
+            return res.ok ? res.json() : null;
+          })
           .then((prevData) => {
             if (prevData) {
               setPreviousYearStats(prevData);
@@ -115,7 +123,7 @@ export default function Dashboard() {
             }
           })
           .catch(() => setPreviousYearStats(null));
-      }
+      }, 500); // 500ms delay to ensure token refresh has completed
     };
 
     // Try to get cached data first (unless force refresh)
