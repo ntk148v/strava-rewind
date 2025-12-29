@@ -1,5 +1,4 @@
 // Landing Page - Connect with Strava
-import Link from "next/link";
 import Image from "next/image";
 
 export default function Home() {
@@ -44,8 +43,9 @@ export default function Home() {
           </p>
 
           {/* CTA Button - Official Strava Connect Button */}
+          {/* Use regular <a> tag instead of Link to force full page navigation for OAuth */}
           <div className="hero-cta">
-            <Link
+            <a
               href="/api/auth/login"
               className="inline-block hover:opacity-90 transition-opacity"
             >
@@ -56,7 +56,7 @@ export default function Home() {
                 height={48}
                 priority
               />
-            </Link>
+            </a>
           </div>
         </div>
 
