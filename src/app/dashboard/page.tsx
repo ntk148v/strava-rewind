@@ -97,6 +97,26 @@ export default function Dashboard() {
   const fetchStats = useCallback(async (year: number, forceRefresh = false) => {
     setLoading(true);
     setError(null);
+    setPreviousYearStats(null); // Reset previous year stats when switching years
+
+    // Helper function to fetch previous year stats
+    const fetchPreviousYearStats = (previousYear: number) => {
+      const cachedPrevious = getCachedStats(previousYear);
+      if (cachedPrevious) {
+        setPreviousYearStats(cachedPrevious);
+      } else {
+        // Fetch in background without blocking
+        fetch(`/api/stats?year=${previousYear}`)
+          .then((res) => (res.ok ? res.json() : null))
+          .then((prevData) => {
+            if (prevData) {
+              setPreviousYearStats(prevData);
+              setCachedStats(previousYear, prevData);
+            }
+          })
+          .catch(() => setPreviousYearStats(null));
+      }
+    };
 
     // Try to get cached data first (unless force refresh)
     if (!forceRefresh) {
@@ -104,6 +124,8 @@ export default function Dashboard() {
       if (cached) {
         setStats(cached);
         setLoading(false);
+        // Still fetch previous year for comparison
+        fetchPreviousYearStats(year - 1);
         return;
       }
     }
@@ -128,22 +150,7 @@ export default function Dashboard() {
       setLastFetched(new Date());
 
       // Also fetch previous year stats for comparison (in background)
-      const previousYear = year - 1;
-      const cachedPrevious = getCachedStats(previousYear);
-      if (cachedPrevious) {
-        setPreviousYearStats(cachedPrevious);
-      } else {
-        // Fetch in background without blocking
-        fetch(`/api/stats?year=${previousYear}`)
-          .then((res) => (res.ok ? res.json() : null))
-          .then((prevData) => {
-            if (prevData) {
-              setPreviousYearStats(prevData);
-              setCachedStats(previousYear, prevData);
-            }
-          })
-          .catch(() => setPreviousYearStats(null));
-      }
+      fetchPreviousYearStats(year - 1);
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred");
     } finally {
