@@ -110,7 +110,9 @@ export default function Dashboard() {
       // Add small delay to allow any token refresh from main request to complete
       // This prevents race condition where concurrent requests see stale tokens
       setTimeout(() => {
-        fetch(`/api/stats?year=${previousYear}`)
+        fetch(`/api/stats?year=${previousYear}`, {
+          credentials: "include", // Ensure cookies are sent on Vercel
+        })
           .then((res) => {
             // Don't throw on 401 for background fetch - just silently fail
             if (res.status === 401) return null;
@@ -139,7 +141,9 @@ export default function Dashboard() {
     }
 
     try {
-      const response = await fetch(`/api/stats?year=${year}`);
+      const response = await fetch(`/api/stats?year=${year}`, {
+        credentials: "include",
+      });
 
       if (response.status === 401) {
         clearCache(); // Clear cache on auth failure
