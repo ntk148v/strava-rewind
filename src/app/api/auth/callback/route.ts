@@ -60,8 +60,6 @@ export async function GET(request: NextRequest) {
       COOKIE_OPTIONS
     );
 
-    console.log("[Callback] Cookies set on response, redirecting to dashboard");
-
     return response;
   } catch (err) {
     console.error("OAuth callback error:", err);

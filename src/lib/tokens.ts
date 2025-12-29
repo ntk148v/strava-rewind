@@ -49,27 +49,12 @@ export async function getValidAccessToken(): Promise<string | null> {
   const refreshToken = cookieStore.get("strava_refresh_token")?.value;
   const expiresAt = cookieStore.get("strava_expires_at")?.value;
 
-  console.log("[Token] Checking tokens:", {
-    hasAccessToken: !!accessToken,
-    hasRefreshToken: !!refreshToken,
-    hasExpiresAt: !!expiresAt,
-    expiresAt: expiresAt,
-  });
-
   if (!accessToken || !refreshToken || !expiresAt) {
-    console.log("[Token] Missing required tokens");
     return null;
   }
 
   const expiresAtTime = parseInt(expiresAt);
   const now = Math.floor(Date.now() / 1000);
-
-  console.log("[Token] Token expiry check:", {
-    expiresAtTime,
-    now,
-    diff: expiresAtTime - now,
-    isValid: expiresAtTime > now + 300,
-  });
 
   // If token is still valid (with 5 min buffer), return it
   if (expiresAtTime > now + 300) {
@@ -77,20 +62,13 @@ export async function getValidAccessToken(): Promise<string | null> {
   }
 
   // Token expired or about to expire, refresh it
-  console.log("[Token] Token expired, attempting refresh...");
   try {
     const newTokens = await refreshAccessToken(refreshToken);
-    console.log(
-      "[Token] Refresh successful, new expires_at:",
-      newTokens.expires_at
-    );
     const athlete = await getAthlete(newTokens.access_token);
     await setTokens(newTokens, athlete);
-    console.log("[Token] New tokens set successfully");
     return newTokens.access_token;
-  } catch (error) {
+  } catch {
     // Refresh failed, clear tokens
-    console.error("[Token] Refresh failed:", error);
     await clearTokens();
     return null;
   }
