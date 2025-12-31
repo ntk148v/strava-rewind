@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { YearStats } from "@/types";
@@ -9,7 +10,9 @@ import {
   formatDuration,
   formatSportType,
   formatPace,
+  computeYearStats,
 } from "@/lib/stats";
+import { parseStravaExport, getAvailableYears } from "@/lib/csv-parser";
 import StatsCard from "@/components/StatsCard";
 import SportSection from "@/components/SportSection";
 import InsightCard from "@/components/InsightCard";
@@ -81,7 +84,17 @@ function clearCache(): void {
   }
 }
 
-export default function Dashboard() {
+// Types for uploaded data storage
+interface UploadedData {
+  activities: string;
+  reactions: string | null;
+  selectedYear: number;
+  timestamp: number;
+}
+
+// Main dashboard content component
+function DashboardContent() {
+  const searchParams = useSearchParams();
   const [stats, setStats] = useState<YearStats | null>(null);
   const [previousYearStats, setPreviousYearStats] = useState<YearStats | null>(
     null
@@ -90,92 +103,194 @@ export default function Dashboard() {
   const [error, setError] = useState<string | null>(null);
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [lastFetched, setLastFetched] = useState<Date | null>(null);
+  const [dataSource, setDataSource] = useState<"oauth" | "upload">("oauth");
+  const [uploadedYears, setUploadedYears] = useState<number[]>([]);
 
   const currentYear = new Date().getFullYear();
-  const availableYears = Array.from({ length: 5 }, (_, i) => currentYear - i);
+  const availableYears =
+    dataSource === "upload" && uploadedYears.length > 0
+      ? uploadedYears
+      : Array.from({ length: 5 }, (_, i) => currentYear - i);
 
-  const fetchStats = useCallback(async (year: number, forceRefresh = false) => {
+  // Load stats from uploaded CSV data
+  const loadUploadedStats = useCallback((year: number) => {
     setLoading(true);
     setError(null);
-    setPreviousYearStats(null); // Reset previous year stats when switching years
-
-    // Helper function to fetch previous year stats with delay to avoid race condition
-    const fetchPreviousYearStats = (previousYear: number) => {
-      const cachedPrevious = getCachedStats(previousYear);
-      if (cachedPrevious) {
-        setPreviousYearStats(cachedPrevious);
-        return;
-      }
-
-      // Add small delay to allow any token refresh from main request to complete
-      // This prevents race condition where concurrent requests see stale tokens
-      setTimeout(() => {
-        fetch(`/api/stats?year=${previousYear}`, {
-          credentials: "include", // Ensure cookies are sent on Vercel
-        })
-          .then((res) => {
-            // Don't throw on 401 for background fetch - just silently fail
-            if (res.status === 401) return null;
-            return res.ok ? res.json() : null;
-          })
-          .then((prevData) => {
-            if (prevData) {
-              setPreviousYearStats(prevData);
-              setCachedStats(previousYear, prevData);
-            }
-          })
-          .catch(() => setPreviousYearStats(null));
-      }, 500); // 500ms delay to ensure token refresh has completed
-    };
-
-    // Try to get cached data first (unless force refresh)
-    if (!forceRefresh) {
-      const cached = getCachedStats(year);
-      if (cached) {
-        setStats(cached);
-        setLoading(false);
-        // Still fetch previous year for comparison
-        fetchPreviousYearStats(year - 1);
-        return;
-      }
-    }
+    setPreviousYearStats(null);
 
     try {
-      const response = await fetch(`/api/stats?year=${year}`, {
-        credentials: "include",
-      });
-
-      if (response.status === 401) {
-        clearCache(); // Clear cache on auth failure
-        window.location.href = "/";
+      const storedData = localStorage.getItem("strava_upload_data");
+      if (!storedData) {
+        setError("No uploaded data found. Please upload your CSV files.");
+        setLoading(false);
         return;
       }
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || "Failed to fetch statistics");
-      }
+      const uploadedData: UploadedData = JSON.parse(storedData);
 
-      const data = await response.json();
-      setStats(data);
-      setCachedStats(year, data); // Cache the result
+      // Get available years from the data
+      const years = getAvailableYears(uploadedData.activities);
+      setUploadedYears(years);
+
+      // Parse activities for selected year
+      const parsed = parseStravaExport(
+        uploadedData.activities,
+        uploadedData.reactions || undefined,
+        year
+      );
+
+      // Create a mock athlete for uploaded data
+      const mockAthlete = {
+        id: 0,
+        username: "",
+        firstname: "Athlete",
+        lastname: "",
+        city: "",
+        state: "",
+        country: "",
+        profile: "",
+        profile_medium: "",
+        premium: false,
+        created_at: "",
+      };
+
+      // Compute stats
+      const computedStats = computeYearStats(
+        parsed.activities,
+        mockAthlete,
+        year
+      );
+      setStats(computedStats);
       setLastFetched(new Date());
 
-      // Also fetch previous year stats for comparison (in background)
-      fetchPreviousYearStats(year - 1);
+      // Also load previous year if available
+      if (years.includes(year - 1)) {
+        const prevParsed = parseStravaExport(
+          uploadedData.activities,
+          uploadedData.reactions || undefined,
+          year - 1
+        );
+        const prevStats = computeYearStats(
+          prevParsed.activities,
+          mockAthlete,
+          year - 1
+        );
+        setPreviousYearStats(prevStats);
+      }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred");
+      setError(
+        err instanceof Error ? err.message : "Failed to parse uploaded data"
+      );
     } finally {
       setLoading(false);
     }
   }, []);
 
+  // Fetch stats from OAuth API
+  const fetchOAuthStats = useCallback(
+    async (year: number, forceRefresh = false) => {
+      setLoading(true);
+      setError(null);
+      setPreviousYearStats(null);
+
+      // Helper function to fetch previous year stats with delay
+      const fetchPreviousYearStats = (previousYear: number) => {
+        const cachedPrevious = getCachedStats(previousYear);
+        if (cachedPrevious) {
+          setPreviousYearStats(cachedPrevious);
+          return;
+        }
+
+        setTimeout(() => {
+          fetch(`/api/stats?year=${previousYear}`, {
+            credentials: "include",
+          })
+            .then((res) => {
+              if (res.status === 401) return null;
+              return res.ok ? res.json() : null;
+            })
+            .then((prevData) => {
+              if (prevData) {
+                setPreviousYearStats(prevData);
+                setCachedStats(previousYear, prevData);
+              }
+            })
+            .catch(() => setPreviousYearStats(null));
+        }, 500);
+      };
+
+      // Try to get cached data first
+      if (!forceRefresh) {
+        const cached = getCachedStats(year);
+        if (cached) {
+          setStats(cached);
+          setLoading(false);
+          fetchPreviousYearStats(year - 1);
+          return;
+        }
+      }
+
+      try {
+        const response = await fetch(`/api/stats?year=${year}`, {
+          credentials: "include",
+        });
+
+        if (response.status === 401) {
+          clearCache();
+          window.location.href = "/";
+          return;
+        }
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.error || "Failed to fetch statistics");
+        }
+
+        const data = await response.json();
+        setStats(data);
+        setCachedStats(year, data);
+        setLastFetched(new Date());
+        fetchPreviousYearStats(year - 1);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "An error occurred");
+      } finally {
+        setLoading(false);
+      }
+    },
+    []
+  );
+
+  // Detect data source and load initial data
   useEffect(() => {
-    fetchStats(selectedYear);
-  }, [selectedYear, fetchStats]);
+    const source = searchParams.get("source");
+    const yearParam = searchParams.get("year");
+
+    if (source === "upload") {
+      setDataSource("upload");
+      const year = yearParam ? parseInt(yearParam) : currentYear;
+      setSelectedYear(year);
+      loadUploadedStats(year);
+    } else {
+      setDataSource("oauth");
+      fetchOAuthStats(selectedYear);
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Handle year change
+  useEffect(() => {
+    if (dataSource === "upload") {
+      loadUploadedStats(selectedYear);
+    } else {
+      fetchOAuthStats(selectedYear);
+    }
+  }, [selectedYear, dataSource, loadUploadedStats, fetchOAuthStats]);
 
   const handleRefresh = () => {
-    fetchStats(selectedYear, true);
+    if (dataSource === "upload") {
+      loadUploadedStats(selectedYear);
+    } else {
+      fetchOAuthStats(selectedYear, true);
+    }
   };
 
   if (loading) {
@@ -188,10 +303,7 @@ export default function Dashboard() {
         <div className="page-content flex items-center justify-center">
           <div className="text-center">
             <p className="text-red-400 mb-6">{error}</p>
-            <button
-              onClick={() => fetchStats(selectedYear)}
-              className="btn-primary"
-            >
+            <button onClick={handleRefresh} className="btn-primary">
               Try Again
             </button>
           </div>
@@ -701,5 +813,16 @@ export default function Dashboard() {
         </div>
       </footer>
     </div>
+  );
+}
+
+// Wrapper component with Suspense for useSearchParams
+export default function Dashboard() {
+  return (
+    <Suspense
+      fallback={<LoadingSpinner message="Loading your year in sport..." />}
+    >
+      <DashboardContent />
+    </Suspense>
   );
 }
