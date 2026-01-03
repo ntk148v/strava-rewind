@@ -9,6 +9,24 @@ interface FileData {
   reactions: string | null;
 }
 
+function InfoIcon() {
+  return (
+    <svg
+      className="info-icon"
+      fill="none"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+      />
+    </svg>
+  );
+}
+
 export default function UploadPage() {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -18,6 +36,7 @@ export default function UploadPage() {
   });
   const [error, setError] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
+  const [firstName, setFirstName] = useState("");
 
   const handleFileRead = useCallback((file: File) => {
     const fileName = file.name.toLowerCase();
@@ -82,6 +101,10 @@ export default function UploadPage() {
       setError("Please upload activities.csv first");
       return;
     }
+    if (!firstName.trim()) {
+      setError("Please enter your first name");
+      return;
+    }
 
     try {
       localStorage.setItem(
@@ -89,6 +112,7 @@ export default function UploadPage() {
         JSON.stringify({
           activities: files.activities,
           reactions: files.reactions,
+          firstName: firstName.trim(),
           timestamp: Date.now(),
         })
       );
@@ -128,13 +152,60 @@ export default function UploadPage() {
           </h1>
 
           {/* Subtitle */}
-          <p className="hero-subtitle max-w-xl">
-            No API connection needed. Use your Strava data export files.
-          </p>
+          <div className="flex gap-2">
+            <span className="hero-subtitle max-w-xl">
+              No API connection needed. Use your Strava data export files.
+            </span>
+            <div className="tooltip-trigger relative">
+              <InfoIcon />
+              <div className="tooltip">
+                <p className="tooltip-title">
+                  How to get your Strava data export
+                </p>
+                {/* Help Section - Collapsible */}
+                <ol className="relative ml-3 space-y-8">
+                  <li className="pl-8 relative">
+                    <p className="text-zinc-300">
+                      1. Go to{" "}
+                      <a
+                        href="https://www.strava.com/athlete/delete_your_account"
+                        target="_blank"
+                        className="text-strava hover:underline"
+                      >
+                        Strava Settings
+                      </a>
+                    </p>
+                  </li>
+                  <li className="pl-8 relative">
+                    <p className="text-zinc-300">
+                      2. Click{" "}
+                      <strong className="text-white">"Download Request"</strong>{" "}
+                      under "Download or Delete Your Account"
+                    </p>
+                  </li>
+                  <li className="pl-8 relative">
+                    <p className="text-zinc-300">
+                      3. Wait for the email (can take a few hours) and download
+                      zip
+                    </p>
+                  </li>
+                  <li className="pl-8 relative">
+                    <p className="text-zinc-300">
+                      4. Extract and upload{" "}
+                      <code className="bg-zinc-800 px-1.5 py-0.5 rounded text-white text-sm">
+                        activities.csv
+                      </code>
+                    </p>
+                  </li>
+                </ol>
+                <div className="tooltip-arrow" />
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Upload Container */}
-        <div className="w-full max-w-2xl mb-12">
+        <div className="w-full max-w-2xl mb-8">
           <div
             className={`
               stat-card group cursor-pointer relative
@@ -164,7 +235,7 @@ export default function UploadPage() {
 
             {!hasFiles ? (
               /* Empty State */
-              <div className="py-20 px-8 text-center bg-transparent">
+              <div className="flex flex-col items-center gap-4">
                 <div className="w-16 h-16 mx-auto mb-6 text-zinc-500 group-hover:text-zinc-300 transition-colors">
                   <svg
                     className="w-full h-full"
@@ -206,14 +277,14 @@ export default function UploadPage() {
                   </button>
                 </div>
 
-                <div className="space-y-4">
+                <div className="flex flex-col gap-4 w-full">
                   {/* Activities File Card */}
                   <div
                     className={`
-                      relative overflow-hidden rounded-xl p-6 border transition-all duration-200
+                      flex items-center justify-between p-4 rounded-lg border transition-all
                       ${
                         files.activities
-                          ? "bg-zinc-800/80 border-green-500/30 shadow-[0_0_15px_rgba(16,185,129,0.1)]"
+                          ? "bg-zinc-800/50 border-zinc-700"
                           : "bg-zinc-900/50 border-zinc-700/50 hover:bg-zinc-800/50 cursor-pointer"
                       }
                     `}
@@ -221,87 +292,45 @@ export default function UploadPage() {
                       !files.activities && fileInputRef.current?.click()
                     }
                   >
-                    <div className="flex items-center justify-between z-10 relative">
-                      <div className="flex items-center gap-4">
-                        <div
-                          className={`
-                          w-10 h-10 rounded-lg flex items-center justify-center
-                          ${
-                            files.activities
-                              ? "bg-green-500/20 text-green-400"
-                              : "bg-zinc-800 text-zinc-500"
-                          }
-                        `}
-                        >
-                          {files.activities ? (
-                            <svg
-                              className="w-6 h-6"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                              stroke="currentColor"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M5 13l4 4L19 7"
-                              />
-                            </svg>
-                          ) : (
-                            <span className="text-lg font-bold">1</span>
-                          )}
-                        </div>
-                        <div>
-                          <p
-                            className={`font-semibold text-lg ${
-                              files.activities ? "text-white" : "text-zinc-400"
-                            }`}
-                          >
-                            activities.csv
-                          </p>
-                          <p className="text-xs text-zinc-500 uppercase tracking-wider font-medium">
-                            Required
-                          </p>
-                        </div>
-                      </div>
-
+                    <div className="flex items-center gap-2">
                       {files.activities ? (
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleRemoveFile("activities");
-                          }}
-                          className="p-2 hover:bg-zinc-700 rounded-full text-zinc-500 hover:text-red-400 transition-colors"
-                        >
-                          <svg
-                            className="w-5 h-5"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M6 18L18 6M6 6l12 12"
-                            />
-                          </svg>
-                        </button>
+                        <span className="text-green-500">✓</span>
                       ) : (
-                        <span className="text-sm text-zinc-500 font-medium px-3 py-1 bg-zinc-800 rounded-full">
-                          Missing
-                        </span>
+                        <span className="text-zinc-500">1</span>
+                      )}
+                      <span
+                        className={`text-sm ${
+                          files.activities ? "text-white" : "text-zinc-400"
+                        }`}
+                      >
+                        activities.csv
+                      </span>
+                      {!files.activities && (
+                        <span className="text-xs text-red-400">(Required)</span>
                       )}
                     </div>
+                    {files.activities ? (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleRemoveFile("activities");
+                        }}
+                        className="text-xs text-zinc-500 hover:text-red-400 transition-colors"
+                      >
+                        Remove
+                      </button>
+                    ) : (
+                      <span className="text-xs text-zinc-500">Missing</span>
+                    )}
                   </div>
 
                   {/* Reactions File Card */}
                   <div
                     className={`
-                      relative overflow-hidden rounded-xl p-6 border transition-all duration-200
+                      flex items-center justify-between p-4 rounded-lg border transition-all
                       ${
                         files.reactions
-                          ? "bg-zinc-800/80 border-blue-500/30 shadow-[0_0_15px_rgba(59,130,246,0.1)]"
+                          ? "bg-zinc-800/50 border-zinc-700"
                           : "bg-zinc-900/50 border-zinc-700/50 hover:bg-zinc-800/50 cursor-pointer"
                       }
                     `}
@@ -309,144 +338,60 @@ export default function UploadPage() {
                       !files.reactions && fileInputRef.current?.click()
                     }
                   >
-                    <div className="flex items-center justify-between z-10 relative">
-                      <div className="flex items-center gap-4">
-                        <div
-                          className={`
-                          w-10 h-10 rounded-lg flex items-center justify-center
-                          ${
-                            files.reactions
-                              ? "bg-blue-500/20 text-blue-400"
-                              : "bg-zinc-800 text-zinc-500"
-                          }
-                        `}
-                        >
-                          {files.reactions ? (
-                            <svg
-                              className="w-6 h-6"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                              stroke="currentColor"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M5 13l4 4L19 7"
-                              />
-                            </svg>
-                          ) : (
-                            <span className="text-lg font-bold">2</span>
-                          )}
-                        </div>
-                        <div>
-                          <p
-                            className={`font-semibold text-lg ${
-                              files.reactions ? "text-white" : "text-zinc-400"
-                            }`}
-                          >
-                            reactions.csv
-                          </p>
-                          <p className="text-xs text-zinc-500 uppercase tracking-wider font-medium">
-                            Optional - for Kudos
-                          </p>
-                        </div>
-                      </div>
-
+                    <div className="flex items-center gap-2">
                       {files.reactions ? (
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleRemoveFile("reactions");
-                          }}
-                          className="p-2 hover:bg-zinc-700 rounded-full text-zinc-500 hover:text-red-400 transition-colors"
-                        >
-                          <svg
-                            className="w-5 h-5"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M6 18L18 6M6 6l12 12"
-                            />
-                          </svg>
-                        </button>
+                        <span className="text-green-500">✓</span>
                       ) : (
-                        <span className="text-sm text-zinc-500 font-medium px-3 py-1 bg-zinc-800 rounded-full">
-                          Optional
-                        </span>
+                        <span className="text-zinc-500">2</span>
                       )}
+                      <span
+                        className={`text-sm ${
+                          files.reactions ? "text-white" : "text-zinc-400"
+                        }`}
+                      >
+                        reactions.csv
+                      </span>
+                      <span className="text-xs text-zinc-500">
+                        (Optional - for Kudos)
+                      </span>
                     </div>
+                    {files.reactions ? (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleRemoveFile("reactions");
+                        }}
+                        className="text-xs text-zinc-500 hover:text-red-400 transition-colors"
+                      >
+                        Remove
+                      </button>
+                    ) : (
+                      <span className="text-xs text-zinc-500">Optional</span>
+                    )}
+                  </div>
+
+                  {/* Name Input */}
+                  <div className="mt-4 space-y-2 text-left">
+                    <label
+                      htmlFor="firstName"
+                      className="text-sm font-medium text-zinc-300"
+                    >
+                      What&apos;s your first name?{" "}
+                      <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      id="firstName"
+                      type="text"
+                      placeholder="Enter your name"
+                      value={firstName}
+                      onChange={(e) => setFirstName(e.target.value)}
+                      className="w-full px-3 py-2 bg-zinc-900 border border-zinc-700 rounded-md text-sm text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-strava focus:border-transparent transition-all"
+                    />
                   </div>
                 </div>
               </div>
             )}
           </div>
-        </div>
-
-        {/* Help Section - Collapsible */}
-        <div className="w-full max-w-2xl mb-12">
-          <details className="group">
-            <summary className="flex items-center justify-center gap-2 cursor-pointer text-zinc-500 hover:text-zinc-300 transition-colors list-none">
-              <span className="text-base font-medium">
-                How to get your Strava data export
-              </span>
-              <svg
-                className="w-4 h-4 transition-transform group-open:rotate-180"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M19 9l-7 7-7-7"
-                />
-              </svg>
-            </summary>
-            <div className="mt-8 stat-card">
-              <ol className="relative ml-3 space-y-8">
-                <li className="pl-8 relative">
-                  <p className="text-zinc-300">
-                    1. Go to{" "}
-                    <a
-                      href="https://www.strava.com/athlete/delete_your_account"
-                      target="_blank"
-                      className="text-strava hover:underline"
-                    >
-                      Strava Settings
-                    </a>
-                  </p>
-                </li>
-                <li className="pl-8 relative">
-                  <p className="text-zinc-300">
-                    2. Click{" "}
-                    <strong className="text-white">"Download Request"</strong>{" "}
-                    under "Download or Delete Your Account"
-                  </p>
-                </li>
-                <li className="pl-8 relative">
-                  <p className="text-zinc-300">
-                    3. Wait for the email (can take a few hours) and download
-                    zip
-                  </p>
-                </li>
-                <li className="pl-8 relative">
-                  <p className="text-zinc-300">
-                    4. Extract and upload{" "}
-                    <code className="bg-zinc-800 px-1.5 py-0.5 rounded text-white text-sm">
-                      activities.csv
-                    </code>
-                  </p>
-                </li>
-              </ol>
-            </div>
-          </details>
         </div>
 
         {/* Error Toast */}
@@ -478,9 +423,11 @@ export default function UploadPage() {
           </Link>
           <button
             onClick={handleGenerate}
-            disabled={!files.activities}
+            disabled={!files.activities || !firstName.trim()}
             className={`btn-primary ${
-              !files.activities ? "opacity-50 cursor-not-allowed" : ""
+              !files.activities || !firstName.trim()
+                ? "opacity-50 cursor-not-allowed"
+                : ""
             }`}
           >
             Generate Report →
